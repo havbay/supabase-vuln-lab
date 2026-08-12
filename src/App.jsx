@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import Auth from './pages/Auth';
-import Home from './pages/Home';
+import AdminDashboard from './pages/AdminDashboard';
+import UserPortal from './pages/UserPortal';
+import Landing from './pages/Landing';
 import MockPreview from './pages/MockPreview';
 
 function App() {
@@ -37,9 +40,14 @@ function App() {
   }
 
   return (
-    <div className="App">
-      {!session ? <Auth /> : <Home session={session} />}
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={!session ? <Landing /> : <Navigate to="/portal" />} />
+        <Route path="/auth" element={!session ? <Auth /> : <Navigate to="/portal" />} />
+        <Route path="/portal" element={session ? <UserPortal session={session} /> : <Navigate to="/auth" />} />
+        <Route path="/admin" element={session ? <AdminDashboard session={session} /> : <Navigate to="/auth" />} />
+      </Routes>
+    </Router>
   );
 }
 
