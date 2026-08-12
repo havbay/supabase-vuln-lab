@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Trash2, LogOut, FileText, Image as ImageIcon } from 'lucide-react';
+import { Trash2, LogOut, FileText, Image as ImageIcon, LayoutDashboard, Users, Settings as SettingsIcon, Bell } from 'lucide-react';
 
 export default function Home({ session }) {
   const [notes, setNotes] = useState([]);
@@ -36,36 +36,19 @@ export default function Home({ session }) {
     if (!newTitle || !newContent) return;
 
     try {
-      let attachmentUrl = null;
-
-      // Handle file upload if a file is selected
       if (file) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${session.user.id}/${fileName}`; // Insecure setup: this is just the path, rules dictate if it works!
-
-        const { error: uploadError } = await supabase.storage
-          .from('attachments')
-          .upload(filePath, file);
-
+        const filePath = `${session.user.id}/${fileName}`;
+        const { error: uploadError } = await supabase.storage.from('attachments').upload(filePath, file);
         if (uploadError) throw uploadError;
-        
-        const { data: publicUrlData } = supabase.storage
-          .from('attachments')
-          .getPublicUrl(filePath);
-          
-        attachmentUrl = filePath;
       }
 
-      const { error } = await supabase
-        .from('notes')
-        .insert([{ 
-          title: newTitle, 
-          content: newContent, 
-          user_id: session.user.id,
-          // note: we would add attachment_url to the DB schema if we wanted to save it, 
-          // but for this lab, we just upload to storage to test bucket permissions.
-        }]);
+      const { error } = await supabase.from('notes').insert([{ 
+        title: newTitle, 
+        content: newContent, 
+        user_id: session.user.id,
+      }]);
 
       if (error) throw error;
       
@@ -81,11 +64,7 @@ export default function Home({ session }) {
 
   const handleDelete = async (id) => {
     try {
-      const { error } = await supabase
-        .from('notes')
-        .delete()
-        .eq('id', id);
-
+      const { error } = await supabase.from('notes').delete().eq('id', id);
       if (error) throw error;
       fetchNotes();
     } catch (error) {
@@ -99,79 +78,117 @@ export default function Home({ session }) {
   };
 
   return (
-    <div className="container">
-      <div className="header">
-        <div>
-          <h1>Security Lab Notes</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Logged in as {session.user.email}</p>
+    <div className="app-layout">
+      {/* Sidebar */}
+      <div className="sidebar">
+        <div className="sidebar-header">
+          SysAdmin Pro
         </div>
-        <button onClick={handleSignOut} className="secondary">
-          <LogOut size={16} /> Sign Out
-        </button>
+        <div className="sidebar-nav">
+          <a href="#" className="nav-item">
+            <LayoutDashboard size={20} />
+            Overview
+          </a>
+          <a href="#" className="nav-item active">
+            <FileText size={20} />
+            System Logs & Notes
+          </a>
+          <a href="#" className="nav-item">
+            <Users size={20} />
+            User Management
+          </a>
+          <a href="#" className="nav-item">
+            <SettingsIcon size={20} />
+            Settings
+          </a>
+        </div>
       </div>
 
-      <div className="card">
-        <h3>Create New Note</h3>
-        <form onSubmit={handleAddNote} style={{ marginTop: '1rem' }}>
-          <input
-            type="text"
-            placeholder="Note Title"
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            required
-          />
-          <textarea
-            placeholder="Write something..."
-            rows={3}
-            value={newContent}
-            onChange={(e) => setNewContent(e.target.value)}
-            required
-          />
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: 'var(--primary-color)' }}>
-              <ImageIcon size={16} />
-              <span>{file ? file.name : 'Attach a file (optional)'}</span>
-              <input 
-                type="file" 
-                style={{ display: 'none' }} 
-                onChange={(e) => setFile(e.target.files[0])}
-              />
-            </label>
-          </div>
-          <button type="submit">
-            <FileText size={16} /> Add Note
-          </button>
-        </form>
-      </div>
-
-      {loading ? (
-        <p>Loading notes...</p>
-      ) : (
-        <div className="notes-grid">
-          {notes.map(note => (
-            <div key={note.id} className="note-card">
-              <h3>{note.title}</h3>
-              <p>{note.content}</p>
-              <div className="meta">
-                User ID: {note.user_id?.substring(0, 8)}...<br/>
-                Created: {new Date(note.created_at).toLocaleDateString()}
+      {/* Main Content */}
+      <div className="main-content">
+        <div className="top-header">
+          <h2 style={{ fontSize: '1.25rem', margin: 0 }}>System Logs & Notes</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <Bell size={20} style={{ color: 'var(--text-secondary)', cursor: 'pointer' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ background: 'var(--primary-color)', color: 'white', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>
+                {session.user.email[0].toUpperCase()}
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-                <button 
-                  className="danger" 
-                  onClick={() => handleDelete(note.id)}
-                  title="Delete note"
-                >
-                  <Trash2 size={16} />
+              <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{session.user.email}</span>
+              <button onClick={handleSignOut} className="secondary" style={{ padding: '0.25rem 0.5rem', marginLeft: '0.5rem' }}>
+                <LogOut size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="content-area">
+          <div className="card" style={{ maxWidth: '800px' }}>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1.125rem' }}>Create System Record</h3>
+            <form onSubmit={handleAddNote}>
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>Record Title</label>
+                  <input type="text" placeholder="e.g., Server restart required" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} required style={{ marginBottom: 0 }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>Details</label>
+                <textarea placeholder="Enter detailed information..." rows={3} value={newContent} onChange={(e) => setNewContent(e.target.value)} required />
+              </div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                  <ImageIcon size={18} />
+                  <span>{file ? file.name : 'Attach server log or image'}</span>
+                  <input type="file" style={{ display: 'none' }} onChange={(e) => setFile(e.target.files[0])} />
+                </label>
+                <button type="submit">
+                  <FileText size={16} /> Save Record
                 </button>
               </div>
-            </div>
-          ))}
-          {notes.length === 0 && (
-            <p style={{ color: 'var(--text-secondary)', gridColumn: '1 / -1' }}>No notes found. Create one above!</p>
-          )}
+            </form>
+          </div>
+
+          <div className="card">
+            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.125rem' }}>All System Records</h3>
+            {loading ? (
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading records...</div>
+            ) : notes.length === 0 ? (
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No records found. Create one above.</div>
+            ) : (
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>Details</th>
+                      <th>User ID (Author)</th>
+                      <th>Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {notes.map(note => (
+                      <tr key={note.id}>
+                        <td style={{ fontWeight: 500 }}>{note.title}</td>
+                        <td style={{ maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{note.content}</td>
+                        <td><span className="badge">{note.user_id?.substring(0, 8)}...</span></td>
+                        <td>{new Date(note.created_at).toLocaleDateString()}</td>
+                        <td>
+                          <button className="danger" onClick={() => handleDelete(note.id)} style={{ padding: '0.25rem 0.5rem' }}>
+                            <Trash2 size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
