@@ -8,14 +8,15 @@ VaultShare is a fictional "Secure Document Exchange" platform for financial firm
 
 ## Lab Objectives
 
-| # | Objective | Status |
-|---|-----------|--------|
-| 1 | Build a real full-stack app with Supabase Auth, Postgres and Storage | Done |
-| 2 | Deploy in an intentionally insecure state (no RLS) | Done |
-| 3 | Run the automated test suite and observe all failures | Done |
-| 4 | Apply RLS policies and storage access controls | Phase 2 |
-| 5 | Re-run the same tests and observe all passing | Phase 2 |
-| 6 | Document all findings and policy explanations | This README |
+| # | Objective |
+|---|-----------|
+| 1 | Build a real full-stack app with Supabase Auth, Postgres and Storage |
+| 2 | Deploy in an intentionally insecure state (no RLS) |
+| 3 | Run the automated test suite and observe all failures |
+| 4 | Apply RLS policies and storage access controls |
+| 5 | Re-run the same tests and observe all passing |
+| 6 | Document all findings and policy explanations |
+
 
 ---
 
