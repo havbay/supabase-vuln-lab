@@ -32,6 +32,62 @@ VaultShare simulates a document exchange portal for CPAs and financial advisors.
 
 ---
 
+## System Architecture
+
+```mermaid
+flowchart TD
+    Browser(["Browser"])
+
+    subgraph Frontend ["React App (Vite)"]
+        Landing["Landing Page"]
+        Auth["Auth Page"]
+        Portal["Client Portal"]
+        Admin["Admin Dashboard"]
+    end
+
+    subgraph Supabase ["Supabase Backend"]
+        AuthService["Auth Service\n(JWT issuer)"]
+
+        subgraph Postgres ["Postgres Database"]
+            RLS{"Row Level\nSecurity"}
+            Documents["documents table"]
+        end
+
+        Storage["Storage Bucket\n(secure_files)"]
+        PostgREST["PostgREST\nREST API"]
+    end
+
+    AnonKey["anon key\n(visible in browser JS)"]
+
+    Browser --> Frontend
+    Frontend -- "supabase-js" --> AuthService
+    AuthService -- "issues JWT" --> Frontend
+    Frontend -- "requests with JWT + anon key" --> PostgREST
+    PostgREST --> RLS
+
+    RLS -- "Phase 1: RLS OFF\nreturns ALL rows" --> Documents
+    RLS -- "Phase 2: RLS ON\nreturns only user's rows" --> Documents
+
+    Frontend -- "file uploads" --> Storage
+    AnonKey -."extracted from\nbrowser DevTools".- PostgREST
+
+    style RLS fill:#fef3c7,stroke:#d97706,color:#000
+    style AnonKey fill:#fee2e2,stroke:#ef4444,color:#000
+    style Documents fill:#d1fae5,stroke:#059669,color:#000
+    style Storage fill:#d1fae5,stroke:#059669,color:#000
+```
+
+### Request flow
+
+1. The browser loads the React app and downloads the compiled JavaScript bundle, which contains the **anon key** in plain text.
+2. On login, `supabase-js` calls the Auth Service, which validates credentials and returns a signed **JWT**.
+3. All subsequent database requests go to **PostgREST** with both the anon key (in `apikey`) and the JWT (in `Authorization`).
+4. PostgREST extracts `auth.uid()` from the JWT and passes the query to Postgres.
+5. **In Phase 1 (no RLS):** Postgres returns all rows regardless of `auth.uid()`.
+6. **In Phase 2 (RLS enabled):** The RLS policy evaluates `auth.uid() = user_id` per row and filters out anything that does not belong to the caller.
+
+---
+
 ## Setup
 
 ### Prerequisites
