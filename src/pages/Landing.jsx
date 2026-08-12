@@ -1,121 +1,242 @@
 import { Link } from 'react-router-dom';
-import { Lock, FileSignature, Building2, ArrowRight, ShieldCheck, Zap, Globe, CheckCircle2 } from 'lucide-react';
+import {
+  Lock, FileSignature, Building2, ArrowRight, ShieldCheck,
+  Zap, Globe, CheckCircle2, FileText, Users, Star
+} from 'lucide-react';
+
+const FEATURES = [
+  {
+    icon: <ShieldCheck size={28} />,
+    title: 'Bank-Level Encryption',
+    desc: 'AES-256 encryption at rest and in transit. SOC2 Type II and HIPAA compliant infrastructure as standard.',
+  },
+  {
+    icon: <FileSignature size={28} />,
+    title: 'Branded Client Portal',
+    desc: 'White-label the entire experience with your firm\'s logo, colors, and a custom subdomain in minutes.',
+  },
+  {
+    icon: <Building2 size={28} />,
+    title: 'Compliance Dashboard',
+    desc: 'Compliance officers review, approve, and archive submitted documents from one centralized view.',
+  },
+  {
+    icon: <Zap size={28} />,
+    title: 'Instant Notifications',
+    desc: 'Clients and officers are notified by email the moment a document is uploaded, reviewed, or rejected.',
+  },
+  {
+    icon: <Globe size={28} />,
+    title: 'Global CDN',
+    desc: 'Multi-region storage ensures clients can upload and download files with sub-second latency worldwide.',
+  },
+  {
+    icon: <FileText size={28} />,
+    title: 'Audit Trail',
+    desc: 'Every action — upload, view, delete — is logged with a timestamp and user ID for full auditability.',
+  },
+];
+
+const TESTIMONIALS = [
+  { name: 'Sarah Chen', role: 'Partner, Chen & Associates CPA', text: 'VaultShare replaced our clunky email workflow overnight. Our clients love it and so does our compliance team.' },
+  { name: 'Marcus Williams', role: 'CTO, Apex Wealth Management', text: 'We evaluated 6 platforms. VaultShare was the only one that felt built for finance, not just repurposed for it.' },
+];
+
+const PLANS = [
+  {
+    name: 'Professional',
+    price: '$49',
+    desc: 'For growing advisory firms.',
+    features: ['Up to 50 Clients', '50 GB Secure Storage', 'Custom Branding', 'Email Support'],
+    cta: 'Start 14-Day Trial',
+    highlight: false,
+  },
+  {
+    name: 'Enterprise',
+    price: '$199',
+    desc: 'For large financial institutions.',
+    features: ['Unlimited Clients', '1 TB Secure Storage', 'Custom Domain + White-label', 'Dedicated Account Manager', 'Full Audit Trail & SLA'],
+    cta: 'Contact Sales',
+    highlight: true,
+  },
+];
 
 export default function Landing() {
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-color)', display: 'flex', flexDirection: 'column' }}>
-      <header style={{ padding: '1.5rem 2rem', background: 'white', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '1.25rem', color: '#0f766e' }}>
-          <Lock size={24} />
-          VaultShare
-        </div>
-        <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-          <a href="#features" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }}>Features</a>
-          <a href="#pricing" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }}>Pricing</a>
-          <div style={{ display: 'flex', gap: '1rem', marginLeft: '1rem' }}>
-            <Link to="/auth" style={{ textDecoration: 'none' }}>
-              <button className="secondary">Login</button>
-            </Link>
-            <Link to="/auth" style={{ textDecoration: 'none' }}>
-              <button style={{ backgroundColor: '#0f766e' }}>Start Free Trial</button>
-            </Link>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
+
+      {/* ── Navbar ── */}
+      <nav className="landing-nav">
+        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '64px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '1.25rem', color: 'var(--brand)' }}>
+            <Lock size={22} strokeWidth={2.5} />
+            VaultShare
           </div>
-        </nav>
-      </header>
+          <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+            <a href="#features" style={{ color: 'var(--text-2)', fontWeight: 500, fontSize: '0.9375rem' }}>Features</a>
+            <a href="#pricing" style={{ color: 'var(--text-2)', fontWeight: 500, fontSize: '0.9375rem' }}>Pricing</a>
+            <a href="#testimonials" style={{ color: 'var(--text-2)', fontWeight: 500, fontSize: '0.9375rem' }}>Testimonials</a>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <Link to="/auth"><button className="secondary">Client Login</button></Link>
+              <Link to="/auth"><button>Start Free Trial</button></Link>
+            </div>
+          </div>
+        </div>
+      </nav>
 
       <main style={{ flex: 1 }}>
-        {/* Hero Section */}
-        <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '6rem 2rem', textAlign: 'center', background: 'linear-gradient(to bottom, white, var(--bg-color))' }}>
-          <div style={{ display: 'inline-block', padding: '0.25rem 1rem', background: '#ccfbf1', color: '#0f766e', borderRadius: '9999px', fontSize: '0.875rem', fontWeight: 600, marginBottom: '1.5rem' }}>
-            Trusted by 500+ Financial Institutions
-          </div>
-          <h1 style={{ fontSize: '4rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--text-primary)', maxWidth: '900px', lineHeight: 1.1 }}>
-            Enterprise-Grade Document <br/><span style={{ color: '#0f766e' }}>Security & Exchange</span>
-          </h1>
-          <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', marginBottom: '3rem', maxWidth: '700px', lineHeight: 1.6 }}>
-            The ultimate white-label client portal for CPAs, Wealth Managers, and Legal Teams. securely collect W-2s, contracts, and financial statements with military-grade encryption.
-          </p>
-          
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <Link to="/auth" style={{ textDecoration: 'none' }}>
-              <button style={{ padding: '1rem 2rem', fontSize: '1.125rem', backgroundColor: '#0f766e' }}>
-                Open Your Vault <ArrowRight size={20} />
-              </button>
-            </Link>
-            <button className="secondary" style={{ padding: '1rem 2rem', fontSize: '1.125rem' }}>
-              Book a Demo
-            </button>
-          </div>
-        </section>
 
-        {/* Features Section */}
-        <section id="features" style={{ padding: '5rem 2rem', background: 'white' }}>
-          <div className="container" style={{ textAlign: 'center' }}>
-            <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Why Choose VaultShare?</h2>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '4rem', fontSize: '1.125rem' }}>Everything you need to manage sensitive client documents compliantly.</p>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem', textAlign: 'left' }}>
-              <div style={{ padding: '1.5rem' }}>
-                <ShieldCheck size={32} style={{ color: '#0f766e', marginBottom: '1rem' }} />
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Bank-Level Security</h3>
-                <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>AES-256 encryption at rest and in transit. Fully SOC2 and HIPAA compliant infrastructure.</p>
-              </div>
-              <div style={{ padding: '1.5rem' }}>
-                <Zap size={32} style={{ color: '#0f766e', marginBottom: '1rem' }} />
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Lightning Fast</h3>
-                <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Global CDN ensures your clients can upload gigabytes of documents in seconds, not minutes.</p>
-              </div>
-              <div style={{ padding: '1.5rem' }}>
-                <Globe size={32} style={{ color: '#0f766e', marginBottom: '1rem' }} />
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Custom Branding</h3>
-                <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>White-label the entire experience with your firm's logo, colors, and custom domain.</p>
-              </div>
+        {/* ── Hero ── */}
+        <section style={{ background: 'linear-gradient(170deg, #ffffff 55%, var(--brand-muted) 100%)', padding: '6rem 1.5rem 5rem', textAlign: 'center' }}>
+          <div style={{ maxWidth: '780px', margin: '0 auto' }} className="fade-up">
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.375rem 1rem', background: 'var(--brand-light)', color: 'var(--brand)', borderRadius: '9999px', fontSize: '0.8125rem', fontWeight: 700, marginBottom: '2rem', letterSpacing: '0.03em' }}>
+              <ShieldCheck size={14} strokeWidth={3} /> Trusted by 500+ Financial Institutions
+            </div>
+
+            <h1 style={{ fontSize: 'clamp(2.25rem, 5vw, 3.75rem)', fontWeight: 800, lineHeight: 1.1, color: 'var(--text-1)', marginBottom: '1.5rem' }}>
+              Enterprise-Grade Document Exchange <span style={{ color: 'var(--brand)' }}>Built for Finance</span>
+            </h1>
+
+            <p style={{ fontSize: '1.1875rem', color: 'var(--text-2)', lineHeight: 1.7, marginBottom: '2.5rem', maxWidth: '600px', margin: '0 auto 2.5rem' }}>
+              Securely collect W-2s, tax returns, and contracts from clients with a beautiful white-label portal — fully encrypted, fully auditable.
+            </p>
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link to="/auth">
+                <button style={{ padding: '0.875rem 2rem', fontSize: '1rem' }}>
+                  Open Your Vault <ArrowRight size={18} />
+                </button>
+              </Link>
+              <button className="secondary" style={{ padding: '0.875rem 2rem', fontSize: '1rem' }}>Book a Demo</button>
+            </div>
+
+            {/* Social proof row */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '3rem', color: 'var(--text-3)', fontSize: '0.875rem' }}>
+              {[...Array(5)].map((_, i) => <Star key={i} size={16} fill="var(--warning)" color="var(--warning)" />)}
+              <span style={{ marginLeft: '0.5rem' }}>Rated <strong style={{ color: 'var(--text-1)' }}>4.9/5</strong> by 200+ compliance teams</span>
             </div>
           </div>
         </section>
 
-        {/* Pricing Section */}
-        <section id="pricing" style={{ padding: '5rem 2rem' }}>
-          <div className="container" style={{ textAlign: 'center' }}>
-            <h2 style={{ fontSize: '2.5rem', marginBottom: '3rem' }}>Simple, transparent pricing</h2>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-              {/* Pro Plan */}
-              <div className="card" style={{ width: '350px', textAlign: 'left', padding: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Professional</h3>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>For growing advisory firms.</p>
-                <div style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '2rem' }}>$49<span style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 400 }}>/mo</span></div>
-                <ul style={{ listStyle: 'none', padding: 0, marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <li style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}><CheckCircle2 size={18} color="#0f766e"/> Up to 500 Clients</li>
-                  <li style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}><CheckCircle2 size={18} color="#0f766e"/> 50GB Secure Storage</li>
-                  <li style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}><CheckCircle2 size={18} color="#0f766e"/> Standard Support</li>
-                </ul>
-                <button style={{ width: '100%', padding: '0.75rem', backgroundColor: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>Start 14-Day Trial</button>
-              </div>
-
-              {/* Enterprise Plan */}
-              <div className="card" style={{ width: '350px', textAlign: 'left', padding: '2.5rem', border: '2px solid #0f766e', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', background: '#0f766e', color: 'white', padding: '0.25rem 1rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700 }}>MOST POPULAR</div>
-                <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Enterprise</h3>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>For large financial institutions.</p>
-                <div style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '2rem' }}>$199<span style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 400 }}>/mo</span></div>
-                <ul style={{ listStyle: 'none', padding: 0, marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <li style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}><CheckCircle2 size={18} color="#0f766e"/> Unlimited Clients</li>
-                  <li style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}><CheckCircle2 size={18} color="#0f766e"/> 1TB Secure Storage</li>
-                  <li style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}><CheckCircle2 size={18} color="#0f766e"/> Dedicated Account Manager</li>
-                  <li style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}><CheckCircle2 size={18} color="#0f766e"/> Custom White-labeling</li>
-                </ul>
-                <button style={{ width: '100%', padding: '0.75rem', backgroundColor: '#0f766e' }}>Contact Sales</button>
-              </div>
+        {/* ── Features ── */}
+        <section id="features" style={{ padding: '5rem 1.5rem', background: 'var(--surface)' }}>
+          <div className="container">
+            <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
+              <h2 style={{ fontSize: '2.25rem', marginBottom: '0.75rem' }}>Everything compliance requires</h2>
+              <p style={{ fontSize: '1.0625rem', color: 'var(--text-2)' }}>No more emailing tax returns. VaultShare gives every stakeholder the right tools.</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+              {FEATURES.map(f => (
+                <div key={f.title} style={{ padding: '1.75rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', background: 'var(--bg)', transition: 'box-shadow 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.boxShadow = 'var(--shadow-md)'}
+                  onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
+                >
+                  <div style={{ width: '52px', height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 'var(--radius)', background: 'var(--brand-light)', color: 'var(--brand)', marginBottom: '1.25rem' }}>
+                    {f.icon}
+                  </div>
+                  <h3 style={{ marginBottom: '0.5rem' }}>{f.title}</h3>
+                  <p style={{ fontSize: '0.9375rem', lineHeight: 1.65 }}>{f.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
+
+        {/* ── Testimonials ── */}
+        <section id="testimonials" style={{ padding: '5rem 1.5rem', background: 'var(--brand-muted)' }}>
+          <div className="container" style={{ textAlign: 'center' }}>
+            <h2 style={{ fontSize: '2.25rem', marginBottom: '3rem' }}>Loved by compliance teams</h2>
+            <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {TESTIMONIALS.map(t => (
+                <div key={t.name} className="card" style={{ maxWidth: '480px', textAlign: 'left', padding: '2rem' }}>
+                  <div style={{ display: 'flex', marginBottom: '1rem' }}>
+                    {[...Array(5)].map((_, i) => <Star key={i} size={14} fill="var(--warning)" color="var(--warning)" />)}
+                  </div>
+                  <p style={{ fontSize: '1rem', lineHeight: 1.7, color: 'var(--text-1)', marginBottom: '1.25rem', fontStyle: 'italic' }}>"{t.text}"</p>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.9375rem' }}>{t.name}</div>
+                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-3)' }}>{t.role}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Pricing ── */}
+        <section id="pricing" style={{ padding: '5rem 1.5rem', background: 'var(--surface)' }}>
+          <div className="container" style={{ textAlign: 'center' }}>
+            <h2 style={{ fontSize: '2.25rem', marginBottom: '0.75rem' }}>Simple, transparent pricing</h2>
+            <p style={{ color: 'var(--text-2)', marginBottom: '3.5rem' }}>No hidden fees. No per-seat charges. Cancel anytime.</p>
+            <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {PLANS.map(plan => (
+                <div key={plan.name} style={{
+                  position: 'relative', width: '340px', textAlign: 'left', padding: '2.5rem',
+                  background: plan.highlight ? 'var(--sidebar-bg)' : 'var(--surface)',
+                  color: plan.highlight ? 'white' : 'var(--text-1)',
+                  border: `2px solid ${plan.highlight ? 'var(--brand)' : 'var(--border)'}`,
+                  borderRadius: 'var(--radius-lg)',
+                  boxShadow: plan.highlight ? 'var(--shadow-xl)' : 'var(--shadow)',
+                }}>
+                  {plan.highlight && (
+                    <div style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: 'var(--brand)', color: 'white', padding: '0.25rem 1.25rem', borderRadius: '9999px', fontSize: '0.6875rem', fontWeight: 800, letterSpacing: '0.08em' }}>
+                      MOST POPULAR
+                    </div>
+                  )}
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: plan.highlight ? 'var(--brand-light)' : 'var(--text-3)', marginBottom: '0.25rem' }}>{plan.name}</div>
+                  <div style={{ fontSize: '2.75rem', fontWeight: 800, lineHeight: 1, marginBottom: '0.5rem' }}>{plan.price}<span style={{ fontSize: '1rem', fontWeight: 400, opacity: 0.6 }}>/mo</span></div>
+                  <p style={{ color: plan.highlight ? 'rgba(255,255,255,0.6)' : 'var(--text-3)', marginBottom: '1.75rem', fontSize: '0.9375rem' }}>{plan.desc}</p>
+                  <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem' }}>
+                    {plan.features.map(f => (
+                      <li key={f} style={{ display: 'flex', gap: '0.625rem', alignItems: 'center', fontSize: '0.9375rem', color: plan.highlight ? 'rgba(255,255,255,0.85)' : 'var(--text-1)' }}>
+                        <CheckCircle2 size={16} color={plan.highlight ? 'var(--brand-light)' : 'var(--brand)'} strokeWidth={2.5} />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <button style={{ width: '100%', padding: '0.875rem', background: plan.highlight ? 'var(--brand)' : 'var(--bg)', color: plan.highlight ? 'white' : 'var(--text-1)', border: plan.highlight ? 'none' : '1px solid var(--border)' }}>
+                    {plan.cta}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
       </main>
 
-      <footer style={{ background: '#111827', color: '#9ca3af', padding: '3rem 2rem', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '1.25rem', color: 'white', marginBottom: '1rem' }}>
-          <Lock size={24} /> VaultShare
+      {/* ── Footer ── */}
+      <footer style={{ background: 'var(--sidebar-bg)', color: 'var(--sidebar-text)', padding: '3rem 1.5rem' }}>
+        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '2rem' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '1.125rem', color: 'white', marginBottom: '0.75rem' }}>
+              <Lock size={20} strokeWidth={2.5} /> VaultShare
+            </div>
+            <p style={{ fontSize: '0.875rem', maxWidth: '280px', color: 'rgba(255,255,255,0.45)' }}>
+              Secure document exchange for CPAs, wealth managers, and legal teams worldwide.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '3rem', flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontWeight: 700, color: 'white', fontSize: '0.8125rem', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Product</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem' }}>
+                <a href="#features" style={{ color: 'rgba(255,255,255,0.5)' }}>Features</a>
+                <a href="#pricing" style={{ color: 'rgba(255,255,255,0.5)' }}>Pricing</a>
+                <a href="#" style={{ color: 'rgba(255,255,255,0.5)' }}>Security</a>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, color: 'white', fontSize: '0.8125rem', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Legal</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem' }}>
+                <a href="#" style={{ color: 'rgba(255,255,255,0.5)' }}>Privacy Policy</a>
+                <a href="#" style={{ color: 'rgba(255,255,255,0.5)' }}>Terms of Service</a>
+              </div>
+            </div>
+          </div>
         </div>
-        <p>© 2026 VaultShare Security Inc. All rights reserved.</p>
+        <div className="container" style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.3)' }}>
+          © 2026 VaultShare Security Inc. All rights reserved.
+        </div>
       </footer>
     </div>
   );

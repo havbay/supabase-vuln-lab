@@ -1,136 +1,154 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { LogOut, Upload, FileText, Clock, FileKey } from 'lucide-react';
+import { LogOut, Upload, FileText, Clock, Lock, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+
+const STATUS = {
+  pending:  { label: 'Under Review', color: '#92400e', bg: '#fef3c7' },
+  approved: { label: 'Approved',     color: '#065f46', bg: '#d1fae5' },
+  rejected: { label: 'Rejected',     color: '#991b1b', bg: '#fee2e2' },
+};
 
 export default function UserPortal({ session }) {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [newTitle, setNewTitle] = useState('');
-  const [newContent, setNewContent] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [file, setFile] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchMyDocuments();
-  }, []);
+  useEffect(() => { fetchMyDocuments(); }, []);
 
   const fetchMyDocuments = async () => {
-    try {
-      setLoading(true);
-      // Insecure! No RLS means querying this actually allows fetching everything if they modify the request.
-      // But the UI will just fetch their own for "appearance" of security.
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setDocuments(data || []);
-    } catch (error) {
-      console.error('Error fetching documents:', error.message);
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false });
+    if (!error) setDocuments(data || []);
+    setLoading(false);
   };
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!newTitle || !newContent || !file) {
-      alert("Please provide a title, description, and attach a file.");
-      return;
-    }
+    if (!title || !description || !file) return;
+    setUploading(true);
 
     try {
-      // 1. Upload the physical file to the bucket
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${session.user.id}/${fileName}`;
-      
-      const { error: uploadError } = await supabase.storage.from('secure_files').upload(filePath, file);
-      if (uploadError) throw uploadError;
+      const ext = file.name.split('.').pop();
+      const path = `${session.user.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('secure_files').upload(path, file);
+      if (upErr) throw upErr;
 
-      // 2. Create the database record
-      const { error } = await supabase.from('documents').insert([{ 
-        title: newTitle, 
-        description: newContent, 
+      const { error: dbErr } = await supabase.from('documents').insert([{
+        title,
+        description,
         user_id: session.user.id,
       }]);
+      if (dbErr) throw dbErr;
 
-      if (error) throw error;
-      
-      setNewTitle('');
-      setNewContent('');
-      setFile(null);
+      setTitle(''); setDescription(''); setFile(null);
       fetchMyDocuments();
-      alert("Document securely uploaded.");
-    } catch (error) {
-      alert('Upload failed: ' + error.message);
+    } catch (err) {
+      alert('Upload failed: ' + err.message);
+    } finally {
+      setUploading(false);
     }
   };
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
-  };
+  const handleSignOut = async () => { await supabase.auth.signOut(); navigate('/'); };
+
+  const initials = session.user.email[0].toUpperCase();
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-      <header style={{ padding: '1rem 2rem', background: 'white', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, fontSize: '1.125rem', color: '#0f766e' }}>
-          <FileKey size={20} />
-          VaultShare Client Portal
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+
+      {/* Top bar */}
+      <header style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', height: 'var(--header-height)', display: 'flex', alignItems: 'center', padding: '0 1.75rem', justifyContent: 'space-between', boxShadow: 'var(--shadow-sm)', position: 'sticky', top: 0, zIndex: 50 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', fontWeight: 800, fontSize: '1.125rem', color: 'var(--brand)' }}>
+          <Lock size={20} strokeWidth={2.5} /> VaultShare
+          <span style={{ fontWeight: 400, color: 'var(--text-3)', fontSize: '0.875rem', marginLeft: '0.25rem' }}>/ Client Portal</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <Link to="/admin" style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Switch to Admin</Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+          <Link to="/admin" style={{ fontSize: '0.875rem', color: 'var(--text-2)', fontWeight: 500 }}>Admin View →</Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{session.user.email}</span>
-            <button onClick={handleSignOut} className="secondary" style={{ padding: '0.25rem 0.5rem' }}>
-              <LogOut size={14} />
-            </button>
+            <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--brand)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.875rem' }}>{initials}</div>
+            <span style={{ fontSize: '0.875rem', color: 'var(--text-2)', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.user.email}</span>
+            <button className="secondary" onClick={handleSignOut} style={{ padding: '0.375rem 0.75rem' }}><LogOut size={14} /> Sign out</button>
           </div>
         </div>
       </header>
 
-      <main className="container" style={{ paddingTop: '2rem' }}>
-        <h1 style={{ marginBottom: '2rem' }}>My Secure Documents</h1>
-        
-        <div className="card" style={{ marginBottom: '2rem', background: 'white', borderTop: '4px solid #0f766e' }}>
-          <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Upload size={18}/> Upload Financial Document</h3>
+      <main style={{ maxWidth: '860px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+
+        <div style={{ marginBottom: '2rem' }}>
+          <h1 style={{ marginBottom: '0.375rem' }}>My Documents</h1>
+          <p>Upload financial documents securely. Your compliance officer will be notified automatically.</p>
+        </div>
+
+        {/* Upload card */}
+        <div className="card" style={{ marginBottom: '2rem', borderTop: '3px solid var(--brand)' }}>
+          <h3 style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Upload size={18} color="var(--brand)" /> Upload a Document
+          </h3>
           <form onSubmit={handleUpload}>
-            <input type="text" placeholder="Document Title (e.g. 2025 Tax Return)" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} required />
-            <textarea placeholder="Any notes for the compliance officer..." rows={2} value={newContent} onChange={(e) => setNewContent(e.target.value)} required />
-            <div style={{ marginBottom: '1rem' }}>
-              <input type="file" onChange={(e) => setFile(e.target.files[0])} required style={{ padding: '0.5rem' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-field" style={{ gridColumn: '1 / -1' }}>
+                <label>Document Title</label>
+                <input type="text" placeholder="e.g. 2025 Federal Tax Return" value={title} onChange={e => setTitle(e.target.value)} required />
+              </div>
+              <div className="form-field" style={{ gridColumn: '1 / -1' }}>
+                <label>Notes for your officer</label>
+                <textarea rows={2} placeholder="Any context or special instructions…" value={description} onChange={e => setDescription(e.target.value)} required />
+              </div>
+              <div className="form-field">
+                <label>Attach File</label>
+                <input type="file" onChange={e => setFile(e.target.files[0])} required accept=".pdf,.jpg,.png,.doc,.docx" />
+              </div>
             </div>
-            <button type="submit" style={{ backgroundColor: '#0f766e' }}>Securely Upload</button>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+              <button type="submit" disabled={uploading}>
+                {uploading ? 'Uploading…' : 'Securely Upload'}
+              </button>
+            </div>
           </form>
         </div>
 
-        <h3 style={{ marginBottom: '1rem' }}>Uploaded Documents</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {loading ? (
-            <p>Loading documents...</p>
-          ) : documents.length === 0 ? (
-            <p style={{ color: 'var(--text-secondary)' }}>You haven't uploaded any documents yet.</p>
-          ) : (
-            documents.map(doc => (
-              <div key={doc.id} className="card" style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', padding: '1rem' }}>
-                <div style={{ background: '#ccfbf1', padding: '0.75rem', borderRadius: '50%', color: '#0f766e' }}>
-                  <FileText size={20} />
-                </div>
-                <div>
-                  <h4 style={{ margin: 0, fontSize: '1rem' }}>{doc.title}</h4>
-                  <p style={{ color: 'var(--text-secondary)', margin: '0.25rem 0 0.5rem 0', fontSize: '0.875rem' }}>{doc.description}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#9ca3af', fontSize: '0.75rem' }}>
-                    <Clock size={12} /> Uploaded on {new Date(doc.created_at).toLocaleString()}
+        {/* Document list */}
+        <h3 style={{ marginBottom: '1rem' }}>Upload History</h3>
+        {loading ? (
+          <p>Loading…</p>
+        ) : documents.length === 0 ? (
+          <div className="card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-3)' }}>
+            <FileText size={40} style={{ marginBottom: '1rem', opacity: 0.3 }} />
+            <p>No documents uploaded yet.<br/>Use the form above to submit your first document.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {documents.map(doc => {
+              const st = STATUS[doc.status] || STATUS.pending;
+              return (
+                <div key={doc.id} className="card" style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', padding: '1.25rem' }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 'var(--radius)', background: 'var(--brand-light)', color: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <FileText size={20} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
+                      <h4>{doc.title}</h4>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: '9999px', background: st.bg, color: st.color, flexShrink: 0 }}>{st.label}</span>
+                    </div>
+                    <p style={{ fontSize: '0.875rem', margin: '0.25rem 0 0.5rem' }}>{doc.description}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: 'var(--text-3)', fontSize: '0.75rem' }}>
+                      <Clock size={12} /> {new Date(doc.created_at).toLocaleString()}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </main>
     </div>
   );
