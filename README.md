@@ -2,69 +2,43 @@
 
 > **A hands-on security lab disguised as a real SaaS product.**
 >
-> VaultShare is a fictional "Secure Document Exchange" platform for financial firms, built with React (Vite) and Supabase. The entire app is intentionally built **first in an insecure state** (no Row Level Security, open storage buckets) so you can learn to identify, exploit, and fix each vulnerability step by step.
+> VaultShare is a fictional "Secure Document Exchange" platform for financial firms built with React (Vite) and Supabase. The app is intentionally deployed in two states — **insecure** and **secure** — so you can attack, observe, fix, and verify each vulnerability yourself.
 
 ---
 
 ## 🎯 Lab Objectives
 
-| # | Goal | Status |
-|---|------|--------|
-| 1 | Build a full-stack app with Supabase Auth, Postgres, and Storage | ✅ |
-| 2 | Learn and configure Row Level Security (RLS) policies | 🔜 |
-| 3 | Test missing or weak RLS — read other users' documents | 🔜 |
-| 4 | Test user-to-user record access (horizontal privilege escalation) | 🔜 |
-| 5 | Test insecure Storage bucket and object permissions | 🔜 |
-| 6 | Document insecure setup, apply corrected policies, and verify fixes | 🔜 |
+| # | Objective | Status |
+|---|-----------|--------|
+| 1 | Build a real full-stack app with Supabase Auth, Postgres & Storage | ✅ Done |
+| 2 | Deploy in an intentionally insecure state (no RLS) | ✅ Done |
+| 3 | Run the automated test suite and observe all failures | ✅ Done |
+| 4 | Apply RLS policies and storage access controls | 🔜 Phase 2 |
+| 5 | Re-run the same tests and observe all passing | 🔜 Phase 2 |
+| 6 | Document all findings and policy explanations | ✅ This README |
 
 ---
 
 ## 🏗️ Application Structure
 
-The app has three user-facing surfaces:
+VaultShare simulates a document exchange portal for CPAs and financial advisors.
 
-| Route | Who uses it | What it does |
-|-------|-------------|--------------|
-| `/` | Public | Landing page — marketing, features, pricing |
-| `/auth` | Anyone | Login and Sign up |
+| Route | Who | Purpose |
+|-------|-----|---------|
+| `/` | Public | SaaS landing page with features and pricing |
+| `/auth` | Anyone | Login / Sign up |
 | `/portal` | Clients | Upload financial documents (W-2s, tax returns, etc.) |
-| `/admin` | Officers | View **all** client documents in a compliance dashboard |
+| `/admin` | Officers | Compliance dashboard — review all uploaded documents |
 
 ---
 
-## ⚠️ Intentional Vulnerabilities (Phase 1)
-
-These are built-in for learning purposes. **Do not deploy this to production without fixing them.**
-
-### 1. Row Level Security is OFF
-The `documents` table has RLS disabled. This means:
-- Any authenticated user can query `SELECT * FROM documents` and get **every record** from every client.
-- The frontend *looks* secure because the React UI only requests `WHERE user_id = me`, but a malicious user can bypass the frontend entirely using the Supabase client directly in the browser console:
-  ```js
-  // Run this in the browser console while logged in as Client A
-  // It will return EVERY document from EVERY client — a complete data breach
-  const { createClient } = supabase;
-  const { data } = await window.supabaseClient.from('documents').select('*');
-  console.log(data);
-  ```
-
-### 2. Storage Bucket has No Policies
-The `secure_files` bucket has no access policies. Any authenticated user can:
-- List all files in the bucket
-- Download any file uploaded by any other user
-
-### 3. No Admin Role Check
-The `/admin` route is only "protected" by the React Router — there is no server-side role check. Any logged-in user can navigate to `/admin` and see all documents.
-
----
-
-## 🛠️ Setup Instructions
+## 🚀 Setup Instructions
 
 ### Prerequisites
 - Node.js 18+ and npm
 - A [Supabase](https://supabase.com/) account (free tier is fine)
 
-### Step 1 — Clone and Install
+### 1 — Clone and install
 
 ```bash
 git clone git@github.com:havbay/supabase-vuln-lab.git
@@ -72,86 +46,213 @@ cd supabase-vuln-lab
 npm install
 ```
 
-### Step 2 — Create a Supabase Project
+### 2 — Create a Supabase project
 
-1. Go to [supabase.com](https://supabase.com/) and click **New Project**.
-2. Fill in a project name, a strong database password, and choose a region.
-3. Wait for the project to finish provisioning (~2 minutes).
+1. Go to [supabase.com](https://supabase.com/) → **New Project**
+2. Set a project name and a strong database password
+3. Wait ~2 minutes for provisioning
 
-### Step 3 — Run the Database Schema
+### 3 — Run the insecure schema
 
-1. In your Supabase dashboard, go to the **SQL Editor** (left sidebar).
-2. Click **New Query** and paste the entire contents of [`database_setup.sql`](./database_setup.sql).
-3. Click **Run**. This creates:
-   - The `documents` table (with RLS intentionally **disabled**)
-   - The `secure_files` storage bucket (with **no** access policies)
+1. Go to **SQL Editor** in your Supabase dashboard
+2. Paste the contents of [`scripts/deploy-insecure.sql`](./scripts/deploy-insecure.sql)
+3. Click **Run**
 
-### Step 4 — Connect the App
+### 4 — Connect the app
 
-1. In your Supabase dashboard, go to **Project Settings → API**.
-2. Copy your **Project URL** and **anon / public key**.
-3. Open `.env.local` in the project root and fill in the values:
+1. Go to **Project Settings → API**
+2. Copy **Project URL** and **anon / public key**
+3. Create `.env.local` in the project root:
 
 ```env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
-### Step 5 — Run Locally
+### 5 — Run locally
 
 ```bash
 npm run dev
+# Open http://localhost:5173
 ```
-
-Open [http://localhost:5173](http://localhost:5173) to see the app.
-
-### Step 6 — Create Test Users
-
-Sign up two different accounts to simulate two separate clients:
-- `client-a@test.com` / `password123`
-- `client-b@test.com` / `password123`
-
-Log in as Client A, upload a document. Then log in as Client B — and try to access Client A's files from the browser console to observe the vulnerability!
 
 ---
 
-## 🔐 The Fix (Phase 2 — Coming Soon)
+## 🔬 The Security Test Suite
 
-After exploring the vulnerabilities, we will apply proper RLS policies:
+The automated test suite in [`scripts/test-vulns.sh`](./scripts/test-vulns.sh) probes the API using only the **anon key** (the public key visible in the browser's compiled JavaScript) — no login, no session.
+
+```bash
+chmod +x scripts/test-vulns.sh
+./scripts/test-vulns.sh
+```
+
+The script tests **5 vulnerability classes**:
+
+| Test | Attack | Severity |
+|------|--------|----------|
+| T1 | Unauthenticated SELECT — read all records | 🔴 Critical |
+| T2 | Unauthenticated INSERT — write without an account | 🔴 High |
+| T3 | Unauthenticated DELETE — destroy data without login | 🔴 Critical |
+| T4 | Storage bucket enumeration — list all uploaded files | 🟡 High |
+| T5 | Schema discovery via REST API | 🟡 Medium |
+
+---
+
+## 🔴 Phase 1 — Insecure Results
+
+Run after applying [`scripts/deploy-insecure.sql`](./scripts/deploy-insecure.sql):
+
+```
+══════════════════════════════════════════════════════
+  VaultShare — Supabase Security Lab Test Suite
+══════════════════════════════════════════════════════
+
+TEST 1: Unauthenticated SELECT on documents table
+→ No login. No session. Just the anon key from the browser JS.
+🔴  VULNERABLE — Got real data with no authentication!
+
+[
+  { "title": "2025 Federal Tax Return", "description": "SSN and full income details attached." },
+  { "title": "Bank Statement - March 2026", "description": "Account #4521-XXXX. Balance: $48,200." },
+  { "title": "Investment Portfolio Q1 2026", "description": "Brokerage totaling $1.2M." },
+  ...
+]
+
+TEST 2: Unauthenticated INSERT
+🔴  VULNERABLE — Wrote a record without any account!
+
+TEST 3: Unauthenticated DELETE
+🔴  VULNERABLE — Deleted records anonymously!
+
+TEST 4: Storage bucket enumeration
+✅  SECURE — No public files exposed.
+
+TEST 5: Schema discovery
+✅  SECURE — Table schema not exposed.
+
+RESULTS: 2 passed  |  3 failed
+⚠  INSECURE STATE DETECTED
+```
+
+### Why this happens
+
+Supabase exposes a REST API at `https://<project>.supabase.co/rest/v1/`. 
+The **anon key** is visible in your browser's compiled JavaScript bundle — anyone can extract it in seconds with DevTools.
+
+Without RLS, a single curl command dumps your entire database:
+```bash
+curl 'https://<project>.supabase.co/rest/v1/documents?select=*' \
+  -H 'apikey: <anon_key>' \
+  -H 'Authorization: Bearer <anon_key>'
+```
+
+The frontend *appears* secure because the React UI only queries `WHERE user_id = me`. But this is **client-side filtering** — an attacker bypasses the React app entirely and talks directly to the API.
+
+---
+
+## ✅ Phase 2 — Applying the Fix
+
+Go to **Supabase SQL Editor**, paste and run [`scripts/deploy-secure.sql`](./scripts/deploy-secure.sql).
+
+Then re-run the test suite:
+```bash
+./scripts/test-vulns.sh
+```
+
+### What the fix does
+
+#### 1. Enable Row Level Security on the `documents` table
 
 ```sql
--- Enable RLS on the documents table
 ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
+```
 
--- Policy: users can only read their own documents
+**Why:** This activates Postgres's built-in per-row access control. With RLS enabled, *all* rows are hidden by default unless a policy explicitly grants access. The database enforces this — it cannot be bypassed from client-side code.
+
+#### 2. Scope SELECT to the authenticated user
+
+```sql
 CREATE POLICY "Users can view their own documents"
   ON documents FOR SELECT
   USING (auth.uid() = user_id);
+```
 
--- Policy: users can only insert their own documents
+**Why:** `auth.uid()` is injected by Supabase from the JWT token in the `Authorization` header. If no valid session exists, `auth.uid()` returns `null`, and `null = user_id` is always false — so unauthenticated requests get zero rows.
+
+#### 3. Scope INSERT so users cannot forge ownership
+
+```sql
 CREATE POLICY "Users can insert their own documents"
   ON documents FOR INSERT
   WITH CHECK (auth.uid() = user_id);
+```
 
--- Policy: users can only delete their own documents
+**Why:** `WITH CHECK` validates the *incoming* data. Without this, an authenticated user could insert a row with another user's `user_id`, effectively impersonating them.
+
+#### 4. Scope DELETE and UPDATE to the row's owner
+
+```sql
 CREATE POLICY "Users can delete their own documents"
   ON documents FOR DELETE
   USING (auth.uid() = user_id);
 ```
 
-And for Storage:
+**Why:** Without this, any authenticated user can delete any row — even rows they did not create.
+
+#### 5. Scope Storage to the user's own folder
 
 ```sql
--- Allow users to upload to their own folder only
 CREATE POLICY "Users upload to own folder"
   ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'secure_files' AND auth.uid()::text = (storage.foldername(name))[1]);
-
--- Allow users to read their own files only
-CREATE POLICY "Users read own files"
-  ON storage.objects FOR SELECT
-  USING (bucket_id = 'secure_files' AND auth.uid()::text = (storage.foldername(name))[1]);
+  WITH CHECK (
+    bucket_id = 'secure_files'
+    AND auth.uid()::text = (storage.foldername(name))[1]
+  );
 ```
+
+**Why:** Files are stored at `<user_id>/<filename>`. This policy checks that the first folder segment matches the authenticated user's UID — so a user cannot upload to or read from another user's folder.
+
+---
+
+## 🟢 Phase 2 — Secure Results (Expected)
+
+After applying `deploy-secure.sql` and re-running the test suite:
+
+```
+TEST 1: Unauthenticated SELECT
+✅  SECURE — Got empty result. RLS is working.
+Response: []
+
+TEST 2: Unauthenticated INSERT
+✅  SECURE — Insert blocked. RLS is working.
+
+TEST 3: Unauthenticated DELETE
+✅  SECURE — Delete blocked by RLS.
+
+TEST 4: Storage enumeration
+✅  SECURE — No files exposed.
+
+TEST 5: Schema discovery
+✅  SECURE — Table schema not exposed.
+
+RESULTS: 5 passed  |  0 failed
+✅  ALL TESTS PASSED — Database is properly secured!
+```
+
+---
+
+## ⚠️ Bonus Vulnerability — Broken Access Control on `/admin`
+
+The `/admin` route is only protected by React Router:
+```js
+// Only checks: are you logged in? NOT: are you an admin?
+<Route path="/admin" element={session ? <AdminDashboard /> : <Navigate to="/auth" />} />
+```
+
+Any registered client can navigate to `/admin` and see all documents in the compliance dashboard. This is **OWASP A01: Broken Access Control**.
+
+**The Fix:** Add a `role` column to a `profiles` table and check it server-side using a Supabase RLS policy or Edge Function before returning admin data.
 
 ---
 
@@ -159,20 +260,21 @@ CREATE POLICY "Users read own files"
 
 ```
 supabase-vuln-lab/
+├── scripts/
+│   ├── deploy-insecure.sql   # Phase 1: intentionally vulnerable schema
+│   ├── deploy-secure.sql     # Phase 2: hardened schema with RLS policies
+│   └── test-vulns.sh         # Automated curl-based vulnerability test suite
 ├── src/
-│   ├── lib/
-│   │   └── supabase.js          # Supabase client initialization
+│   ├── lib/supabase.js       # Supabase client initialization
 │   ├── pages/
-│   │   ├── Landing.jsx          # Public marketing page
-│   │   ├── Auth.jsx             # Login / Sign up
-│   │   ├── UserPortal.jsx       # Client document upload portal
-│   │   ├── AdminDashboard.jsx   # Compliance officer dashboard
-│   │   └── MockPreview.jsx      # Preview shown when DB is not connected
-│   ├── App.jsx                  # Router and auth state management
-│   ├── index.css                # Design system and global styles
-│   └── main.jsx                 # React entry point
-├── database_setup.sql           # Initial (intentionally insecure) DB schema
-├── .env.local                   # Your Supabase credentials (not committed)
+│   │   ├── Landing.jsx       # Public marketing page
+│   │   ├── Auth.jsx          # Login / Sign up
+│   │   ├── UserPortal.jsx    # Client document upload portal
+│   │   ├── AdminDashboard.jsx# Compliance officer dashboard
+│   │   └── MockPreview.jsx   # Preview shown when DB is not connected
+│   ├── App.jsx               # Router and auth state
+│   └── index.css             # Design system
+├── .env.local                # Supabase credentials (not committed)
 └── README.md
 ```
 
@@ -190,13 +292,14 @@ supabase-vuln-lab/
 
 ---
 
-## 📚 Learning Resources
+## 📚 Further Reading
 
-- [Supabase Row Level Security Guide](https://supabase.com/docs/guides/database/postgres/row-level-security)
+- [Supabase RLS Guide](https://supabase.com/docs/guides/database/postgres/row-level-security)
 - [Supabase Storage Access Control](https://supabase.com/docs/guides/storage/security/access-control)
-- [OWASP Broken Access Control](https://owasp.org/Top10/A01_2021-Broken_Access_Control/)
-- [Postgres RLS Documentation](https://www.postgresql.org/docs/current/ddl-rowsecurity.html)
+- [OWASP Top 10 — A01: Broken Access Control](https://owasp.org/Top10/A01_2021-Broken_Access_Control/)
+- [OWASP Top 10 — A07: Identification & Auth Failures](https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures/)
+- [Postgres Row Security Policies](https://www.postgresql.org/docs/current/ddl-rowsecurity.html)
 
 ---
 
-> Built for learning purposes. Do not use in production without completing Phase 2 security fixes.
+> ⚠️ Built for learning purposes only. Do not deploy the insecure state to production.
